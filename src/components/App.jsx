@@ -75,7 +75,7 @@ export class App extends Component {
     });
   };
 
-  closeModal = event => {
+  closeModal = () => {
     this.setState({ modal: { isOpenModal: false, modalData: null } });
   };
 

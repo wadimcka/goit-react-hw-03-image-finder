@@ -17,10 +17,20 @@ export class Modal extends Component {
     }
   };
 
+  handlOverlayCkick = event => {
+    console.log(event.target);
+    console.log(event.currentTarget);
+    const { closeModal } = this.props;
+
+    if (event.target === event.currentTarget) {
+      closeModal();
+    }
+  };
+
   render() {
-    const { largeImageURL, tags, closeModal } = this.props;
+    const { largeImageURL, tags } = this.props;
     return (
-      <ModalOverlay onClick={closeModal}>
+      <ModalOverlay onClick={this.handlOverlayCkick}>
         <ModalWin>
           <img src={largeImageURL} alt={tags} />
         </ModalWin>
