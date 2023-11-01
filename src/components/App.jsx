@@ -76,9 +76,7 @@ export class App extends Component {
   };
 
   closeModal = event => {
-    if (event.target === event.currentTarget) {
-      this.setState({ modal: { isOpenModal: false, modalData: null } });
-    }
+    this.setState({ modal: { isOpenModal: false, modalData: null } });
   };
 
   loadMore = () => {
