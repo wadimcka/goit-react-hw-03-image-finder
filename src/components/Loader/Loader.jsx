@@ -1,14 +1,15 @@
-import { Dna } from 'react-loader-spinner';
+import React from 'react';
+import { InfinitySpin } from 'react-loader-spinner';
 
-export function Loader() {
+const Loader = () => {
   return (
-    <Dna
+    <InfinitySpin
       visible={true}
-      height={80}
-      width={80}
-      ariaLabel="dna-loading"
-      wrapperStyle={{}}
-      wrapperClass="dna-wrapper"
+      width="200"
+      color="#4fa94d"
+      ariaLabel="infinity-spin-loading"
     />
   );
-}
+};
+
+export default Loader;

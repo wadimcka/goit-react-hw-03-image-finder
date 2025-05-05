@@ -1,57 +1,33 @@
-import React, { Component } from 'react';
-import { toast } from 'react-toastify';
-import { FcSearch } from 'react-icons/fc';
+import React from 'react';
 
-import 'react-toastify/dist/ReactToastify.css';
-import {
-  SearchBar,
-  SearchForm,
-  SearchFormBtn,
-  SearchFormButtonLabel,
-  SearchFormInput,
-} from './Searchbar.styled';
-
-export class Searchbar extends Component {
-  state = {
-    searchValue: '',
-  };
-
-  handlInputChange = event => {
-    const request = event.target.value.trim().toLowerCase();
-    this.setState({ searchValue: request });
-  };
-
-  handlerSubmit = event => {
-    event.preventDefault();
-    if (this.state.searchValue) {
-      this.props.onSubmit(this.state);
-      this.setState({ searchValue: '' });
-    } else {
-      toast.warn('Please enter a search value');
+const Searchbar = ({ onSubmit }) => {
+  const handelSubmit = evt => {
+    evt.preventDefault();
+    const query = evt.target.query.value.toLowerCase().trim();
+    if (query === '') {
+      // ! тут будет TOAST!!
+      console.log('введите данные для поиска', '!!!!!!!!');
+      return;
     }
+    onSubmit(query);
+    evt.target.reset();
   };
 
-  render() {
-    return (
-      <SearchBar>
-        <SearchForm onSubmit={this.handlerSubmit}>
-          <SearchFormBtn type="submit">
-            <FcSearch size="20" />
-            <SearchFormButtonLabel>Search</SearchFormButtonLabel>
-          </SearchFormBtn>
+  return (
+    <header>
+      <form onSubmit={handelSubmit}>
+        <button type="submit">
+          <span>Search</span>
+        </button>
 
-          <SearchFormInput
-            className="input"
-            type="text"
-            autoComplete="off"
-            autoFocus
-            placeholder="Search images and photos"
-            value={this.state.searchValue}
-            onChange={this.handlInputChange}
-          />
-        </SearchForm>
-      </SearchBar>
-    );
-  }
-}
+        <input
+          name="query"
+          type="text"
+          placeholder="Search images and photos"
+        />
+      </form>
+    </header>
+  );
+};
+
 export default Searchbar;

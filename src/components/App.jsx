@@ -1,123 +1,127 @@
 import React, { Component } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
-import Searchbar from './Searchbar/Searchbar';
-import 'react-toastify/dist/ReactToastify.css';
-import Modal from './Modal/Modal';
-import ImageGallery from './ImageGallery/ImageGallery';
-import requestApi from './api/api';
-import { Loader } from './Loader/Loader';
-import Button from './Button/Button';
+import { ToastContainer, Bounce } from 'react-toastify';
 
-export class App extends Component {
+import { LoadMoreButton, ImageGallery, Searchbar, Loader } from 'components';
+import { STATES, MESSAGES, PER_PAGE } from 'constants';
+import { notify } from 'services/toast-messages';
+import fetchImage from 'services/pixabay-api';
+
+export default class App extends Component {
   state = {
-    isLoading: false,
-    searchValue: '',
-    modal: {
-      isOpenModal: false,
-      modalData: null,
-    },
-    imagesData: [],
+    query: null,
+    images: [],
     page: 1,
-    totalHits: 0,
     error: null,
-    showBtn: false,
+    showModal: false,
+    status: STATES.idle,
   };
 
   componentDidUpdate(_, prevState) {
-    const { searchValue, page } = this.state;
-
-    if (prevState.searchValue !== searchValue || prevState.page !== page) {
-      this.fetchImages(searchValue, page);
+    const { query, page } = this.state;
+    if (prevState.query === query && prevState.page === page) {
+      return;
     }
+    this.getImage(query, page);
   }
 
-  handlerFormValue = ({ searchValue }) => {
-    this.setState({ searchValue, imagesData: [], page: 1 });
+  handleFormSubmit = query => {
+    this.setState({
+      query,
+      images: [],
+      page: 1,
+      totalHits: 0,
+      error: null,
+      showModal: false,
+    });
   };
 
-  fetchImages = async (searchValue, page) => {
-    try {
-      const response = await requestApi(searchValue, page);
-      if (response.totalHits === 0) {
-        toast.warn('Nothing was found for your request! Try again.');
-        return;
-      }
-      this.setState(prevState => ({
-        imagesData: [...prevState.imagesData, ...response.hits],
-        totalHits: response.totalHits,
-        showBtn: this.state.page < Math.ceil(response.totalHits / 12),
-      }));
+  getImage = async (query, page) => {
+    this.setLoading();
 
-      if (response.hits.length > 0 && this.state.page === 1) {
-        toast.success(`We found ${response.totalHits} images. `);
-      }
-      if (
-        this.state.totalHits > 0 &&
-        this.state.totalHits - this.state.imagesData.length <= 12
-      ) {
-        toast.warn(
-          `There are ${
-            this.state.totalHits - this.state.imagesData.length
-          } or fewer images remaining.`
-        );
-      }
+    try {
+      const { hits, totalHits } = await fetchImage({ query, page });
+      this.updateImages(hits, totalHits);
+      this.handleResults(hits, totalHits, query, page);
     } catch (error) {
-      this.setState({ error: error.message });
-      toast.warn(this.state.error);
-    } finally {
-      this.setState({ isLoading: false });
+      this.handleError(error);
     }
   };
 
-  openModal = ({ largeImageURL, tags }) => {
+  setLoading = () => {
+    this.setState({ status: STATES.loading });
+  };
+
+  updateImages = (hits, totalHits) => {
+    this.setState(prevState => ({
+      images: [...prevState.images, ...hits],
+      totalHits,
+    }));
+  };
+
+  handleResults = (hits, totalHits, query, page) => {
+    if (hits.length === 0) {
+      this.setState({ status: STATES.idle });
+      notify.noResults(query);
+      return;
+    }
+
+    this.setState({ status: STATES.resolved });
+
+    if (page === 1) {
+      notify.success(totalHits);
+    }
+
+    const loadedImages = (page - 1) * PER_PAGE + hits.length;
+    const remaining = totalHits - loadedImages;
+
+    if (remaining > 0 && remaining < PER_PAGE) {
+      notify.rest(remaining);
+    }
+  };
+
+  handleError = error => {
     this.setState({
-      modal: { isOpenModal: true, modalData: { largeImageURL, tags } },
+      error,
+      status: STATES.rejected,
     });
+    notify.error(error);
   };
 
-  closeModal = () => {
-    this.setState({ modal: { isOpenModal: false, modalData: null } });
-  };
-
-  loadMore = () => {
-    this.setState(prevState => {
-      return { page: prevState.page + 1 };
-    });
+  onLoadMore = () => {
+    this.setState(prevState => ({
+      page: prevState.page + 1,
+    }));
   };
 
   render() {
-    const { imagesData, isLoading, error, showBtn } = this.state;
-    const { modalData, isOpenModal } = this.state.modal;
+    const { images, status, totalHits } = this.state;
+    const canShowLoadMoreBtn = totalHits > images.length;
 
     return (
       <div>
-        <Searchbar onSubmit={this.handlerFormValue} />
-        {error !== null && toast.error(this.state.error)}
-        {isLoading && <Loader />}
-        <ImageGallery images={imagesData} openModal={this.openModal} />
-        {showBtn && <Button onClick={this.loadMore} />}
-        {isOpenModal && (
-          <Modal
-            largeImageURL={modalData.largeImageURL}
-            tags={modalData.tags}
-            closeModal={this.closeModal}
-          />
+        <Searchbar onSubmit={this.handleFormSubmit} />
+        {status === STATES.idle && <p>{MESSAGES.searchPrompt}</p>}
+        {status === STATES.loading && <Loader />}
+        <ImageGallery images={images} />
+        {canShowLoadMoreBtn && <LoadMoreButton onLoadMore={this.onLoadMore} />}
+        {status === STATES.rejected && (
+          <p style={{ color: 'red' }}>{this.state.error?.message}</p>
         )}
+
         <ToastContainer
           position="top-right"
           autoClose={3000}
           hideProgressBar={false}
           newestOnTop={false}
-          closeOnClick
+          closeOnClick={false}
           rtl={false}
           pauseOnFocusLoss
           draggable
           pauseOnHover
-          theme="colored"
+          theme="light"
+          transition={Bounce}
         />
       </div>
     );
   }
 }
-
-export default App;

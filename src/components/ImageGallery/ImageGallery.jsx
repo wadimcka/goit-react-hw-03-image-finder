@@ -1,22 +1,14 @@
-import ImageGalleryItem from 'components/ImageGalleryItem/ImageGalleryItem';
+import { ImageGalleryItem } from 'components';
 import React from 'react';
-import { ImageList } from './ImageGallery.styled';
 
-function ImageGallery({ images, openModal }) {
-  return (
-    <ImageList>
-      {images !== null &&
-        images.map(({ id, webformatURL, tags, largeImageURL }) => (
-          <ImageGalleryItem
-            key={id}
-            webformatURL={webformatURL}
-            tags={tags}
-            largeImageURL={largeImageURL}
-            openModal={openModal}
-          />
-        ))}
-    </ImageList>
+const ImageGallery = ({ images }) => {
+  return images.length === 0 ? null : (
+    <ul>
+      {images.map(image => (
+        <ImageGalleryItem key={image.id} image={image} />
+      ))}
+    </ul>
   );
-}
+};
 
 export default ImageGallery;
