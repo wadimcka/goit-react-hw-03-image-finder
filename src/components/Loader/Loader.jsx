@@ -1,14 +1,20 @@
 import React from 'react';
-import { InfinitySpin } from 'react-loader-spinner';
+import { MagnifyingGlass } from 'react-loader-spinner';
+
+import { LoaderWrapper } from './Loader.styled';
 
 const Loader = () => {
   return (
-    <InfinitySpin
-      visible={true}
-      width="200"
-      color="#4fa94d"
-      ariaLabel="infinity-spin-loading"
-    />
+    <LoaderWrapper>
+      <MagnifyingGlass
+        visible={true}
+        height="90"
+        width="90"
+        ariaLabel="magnifying-glass-loading"
+        glassColor="white"
+        color="blue"
+      />
+    </LoaderWrapper>
   );
 };
 

@@ -1,11 +1,18 @@
 import React from 'react';
 
-const ImageGalleryItem = ({ image }) => {
+import placeholder from '../../assets/Placeholder.png';
+import { GalleryImage, GalleryItem } from './ImageGalleryItem.styled';
+
+export const ImageGalleryItem = ({ image, openModal }) => {
+  const { webformatURL = placeholder, tags = 'No description' } = image;
   return (
-    <li>
-      <img src={image.webformatURL} alt={image.tags} />
-    </li>
+    <GalleryItem
+      onClick={() => {
+        openModal(image);
+      }}
+    >
+      <GalleryImage src={webformatURL} alt={tags} />
+    </GalleryItem>
   );
 };
-
 export default ImageGalleryItem;

@@ -1,12 +1,22 @@
 import React from 'react';
 
+import { notify } from 'services/toast-messages';
+
+import {
+  Header,
+  InputWraper,
+  SearchIcon,
+  SearchInput,
+  StyledButton,
+} from './Searchbar.styled';
+
 const Searchbar = ({ onSubmit }) => {
-  const handelSubmit = evt => {
+  const handleSubmit = evt => {
     evt.preventDefault();
     const query = evt.target.query.value.toLowerCase().trim();
     if (query === '') {
-      // ! тут будет TOAST!!
-      console.log('введите данные для поиска', '!!!!!!!!');
+      notify.noResults(query);
+      evt.target.reset();
       return;
     }
     onSubmit(query);
@@ -14,19 +24,21 @@ const Searchbar = ({ onSubmit }) => {
   };
 
   return (
-    <header>
-      <form onSubmit={handelSubmit}>
-        <button type="submit">
-          <span>Search</span>
-        </button>
-
-        <input
-          name="query"
-          type="text"
-          placeholder="Search images and photos"
-        />
+    <Header>
+      <form onSubmit={handleSubmit}>
+        <InputWraper>
+          <SearchInput
+            name="query"
+            type="text"
+            placeholder="Search images and photos"
+            aria-label="Search query"
+          />
+          <StyledButton type="submit" aria-label="Search">
+            <SearchIcon />
+          </StyledButton>
+        </InputWraper>
       </form>
-    </header>
+    </Header>
   );
 };
 

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { ToastContainer, Bounce } from 'react-toastify';
 
-import { LoadMoreButton, ImageGallery, Searchbar, Loader } from 'components';
+import { ImageGallery, Searchbar, Loader, Modal, Button } from 'components';
 import { STATES, MESSAGES, PER_PAGE } from 'constants';
 import { notify } from 'services/toast-messages';
 import fetchImage from 'services/pixabay-api';
@@ -13,6 +13,7 @@ export default class App extends Component {
     page: 1,
     error: null,
     showModal: false,
+    selectedImage: null,
     status: STATES.idle,
   };
 
@@ -29,14 +30,13 @@ export default class App extends Component {
       query,
       images: [],
       page: 1,
-      totalHits: 0,
       error: null,
       showModal: false,
     });
   };
 
   getImage = async (query, page) => {
-    this.setLoading();
+    this.setState({ status: STATES.loading });
 
     try {
       const { hits, totalHits } = await fetchImage({ query, page });
@@ -45,10 +45,6 @@ export default class App extends Component {
     } catch (error) {
       this.handleError(error);
     }
-  };
-
-  setLoading = () => {
-    this.setState({ status: STATES.loading });
   };
 
   updateImages = (hits, totalHits) => {
@@ -80,11 +76,13 @@ export default class App extends Component {
   };
 
   handleError = error => {
+    const errorMsg =
+      error.response?.data?.message || error.message || 'Unknown error';
     this.setState({
-      error,
+      error: errorMsg,
       status: STATES.rejected,
     });
-    notify.error(error);
+    notify.error(errorMsg);
   };
 
   onLoadMore = () => {
@@ -93,19 +91,44 @@ export default class App extends Component {
     }));
   };
 
+  openModal = image => {
+    this.setState({
+      showModal: true,
+      selectedImage: image,
+    });
+  };
+
+  closeModal = () => {
+    this.setState({
+      selectedImage: null,
+      showModal: false,
+    });
+  };
+
   render() {
-    const { images, status, totalHits } = this.state;
+    const { images, status, totalHits, showModal, selectedImage, error } =
+      this.state;
     const canShowLoadMoreBtn = totalHits > images.length;
 
     return (
       <div>
         <Searchbar onSubmit={this.handleFormSubmit} />
-        {status === STATES.idle && <p>{MESSAGES.searchPrompt}</p>}
-        {status === STATES.loading && <Loader />}
-        <ImageGallery images={images} />
-        {canShowLoadMoreBtn && <LoadMoreButton onLoadMore={this.onLoadMore} />}
-        {status === STATES.rejected && (
-          <p style={{ color: 'red' }}>{this.state.error?.message}</p>
+
+        {status === STATES.idle}
+        {status === STATES.loading && images.length === 0 && <Loader />}
+        {status === STATES.rejected && <p>{MESSAGES.error(error)}</p>}
+
+        <ImageGallery images={images} openModal={this.openModal} />
+
+        {canShowLoadMoreBtn &&
+          (status === STATES.loading && images.length > 0 ? (
+            <Loader />
+          ) : (
+            <Button onClick={this.onLoadMore}>Load More</Button>
+          ))}
+
+        {showModal && (
+          <Modal image={selectedImage} closeModal={this.closeModal} />
         )}
 
         <ToastContainer
